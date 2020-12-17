@@ -13,6 +13,9 @@
 // distance from sensor to front of car
 #define OFFSET 7
 
+// number of consecutive valid readings before re-enabling display
+#define DISPLAY_THRESHOLD 5
+
 // Distance sensor pins
 #define TRIG_PIN 16 // D0
 #define ECHO_PIN 5 // D1
@@ -34,8 +37,8 @@
 
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
 
-long duration;
-int distance;
+int distances[DISPLAY_THRESHOLD];
+bool on = true;
 
 void setup() {
     Serial.begin(115200);
@@ -52,15 +55,14 @@ void setup() {
     tft.drawBitmap(0, 0, volvoLogo, 128, 128, BLACK, WHITE);
     delay(1000);
     tft.fillScreen(BLACK);
-    distance = 0;
 }
 
 void loop() {
-    duration = readDuration();
-    distance = duration * 0.034 / 2 - OFFSET;
+    long duration = readDuration();
+    int distance = duration * 0.034 / 2 - OFFSET;
 
     // Used for testing fonts:
-    // duration = 1;
+    // long duration = 1;
     // distance++;
     // if (distance > MAX_DISTANCE + 5) {
     //     distance = 0;
@@ -78,13 +80,18 @@ void loop() {
         Serial.print(distance);
         Serial.println(" cm");
 
+        saveMeasurement(distance);
         if (distance <= MAX_DISTANCE) {
-            displayDistance(distance);
+            checkPrevious();
+            if (on) {
+                displayDistance(distance);
+            }
         } else {
+            on = false;
             tft.fillScreen(BLACK);
         }
     }
-    delay(300);
+    delay(200);
 }
 
 long readDuration() {
@@ -114,4 +121,21 @@ void displayDistance(int distance) {
     int numDigits = (distance >= 10) + 1;
     tft.setCursor((SCREEN_WIDTH - FONT_W * numDigits) / 2 - 1, (SCREEN_HEIGHT - FONT_H) / 2 + 5);
     tft.println(distance);
+}
+
+void saveMeasurement(int distance) {
+    for (int i = 0; i < DISPLAY_THRESHOLD - 1; i++) {
+        distances[i] = distances[i + 1];
+    }
+    distances[DISPLAY_THRESHOLD - 1] = distance;
+}
+
+void checkPrevious() {
+    int i;
+    for (i = 0; i < DISPLAY_THRESHOLD; i++) {
+        if (distances[i] > MAX_DISTANCE) {
+            break;
+        }
+    }
+    on = (i == DISPLAY_THRESHOLD);
 }
