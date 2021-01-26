@@ -3,42 +3,11 @@
 #include <Adafruit_SSD1351.h>
 #include <SPI.h>
 #include "graphics.h"
-
-// bottom of range for color changing (RED)
-#define CLOSE_DISTANCE 30
-// top of range for color changing (GREEN)
-#define FAR_DISTANCE 65
-// max distance to display
-#define MAX_DISTANCE 99
-// distance from sensor to front of car
-#define OFFSET 7
-
-// number of consecutive valid readings before re-enabling display
-#define DISPLAY_THRESHOLD 5
-
-// Distance sensor pins
-#define TRIG_PIN 16 // D0
-#define ECHO_PIN 5 // D1
-
-// OLED SPI pins
-#define SCLK_PIN 14 // D5
-#define MOSI_PIN 13 // D7
-#define DC_PIN   4  // D2
-#define CS_PIN   15 // D8
-#define RST_PIN  0  // D3
-
-// Display settings
-#define SCREEN_WIDTH  128
-#define SCREEN_HEIGHT 128
-
-#define FONT_SIZE 9
-#define FONT_W 5 * FONT_SIZE
-#define FONT_H 8 * FONT_SIZE
+#include "config.h"
 
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
 
 int distances[DISPLAY_THRESHOLD];
-bool on = true;
 
 void setup() {
     Serial.begin(115200);
@@ -51,9 +20,11 @@ void setup() {
     tft.begin();
     tft.setTextSize(FONT_SIZE);
 
+#ifdef DISPLAY_VOLVO_LOGO
     // Display Volvo logo for 1 second on boot-up
     tft.drawBitmap(0, 0, volvoLogo, 128, 128, BLACK, WHITE);
     delay(1000);
+#endif
     tft.fillScreen(BLACK);
 }
 
@@ -61,39 +32,27 @@ void loop() {
     long duration = readDuration();
     int distance = duration * 0.034 / 2 - OFFSET;
 
-    // Used for testing fonts:
-    // long duration = 1;
-    // distance++;
-    // if (distance > MAX_DISTANCE + 5) {
-    //     distance = 0;
-    // }
-
     if (duration == 0) {
         Serial.println("No pulse from sensor");
-        tft.setTextSize(FONT_SIZE - 2);
-        tft.setTextColor(WHITE, BLACK);
-        tft.setCursor(1, (SCREEN_HEIGHT - 8 * (FONT_SIZE - 2)) / 2 + 5);
-        tft.println("N/A");
+        displayNA();
     } else {
-        tft.setTextSize(FONT_SIZE);
         Serial.print("Distance: ");
         Serial.print(distance);
         Serial.println(" cm");
 
         saveMeasurement(distance);
-        if (distance <= MAX_DISTANCE) {
-            checkPrevious();
-            if (on) {
-                displayDistance(distance);
-            }
+        if (distance <= MAX_DISTANCE && checkPrevious()) {
+            displayDistance(distance);
         } else {
-            on = false;
             tft.fillScreen(BLACK);
         }
     }
     delay(200);
 }
 
+/*
+  readDuration will send a pulse and read the incoming pulse to get the duration
+*/
 long readDuration() {
     digitalWrite(TRIG_PIN, LOW);
     delayMicroseconds(2);
@@ -103,6 +62,10 @@ long readDuration() {
     return pulseIn(ECHO_PIN, HIGH);
 }
 
+/*
+  displayDistance will write the measured distance value to the OLED display with a
+  color gradient
+*/
 void displayDistance(int distance) {
     int value = map(distance, CLOSE_DISTANCE, FAR_DISTANCE, 0, 255);
     uint8_t red = 255 - value;
@@ -117,12 +80,27 @@ void displayDistance(int distance) {
         color = RED;
     }
     tft.setTextColor(color, BLACK);
+    tft.setTextSize(FONT_SIZE);
 
     int numDigits = (distance >= 10) + 1;
     tft.setCursor((SCREEN_WIDTH - FONT_W * numDigits) / 2 - 1, (SCREEN_HEIGHT - FONT_H) / 2 + 5);
     tft.println(distance);
 }
 
+/*
+  displayNA is used to put "N/A" on the display to indicate there is no distance input
+*/
+void displayNA() {
+    tft.setTextSize(FONT_SIZE - 2);
+    tft.setTextColor(WHITE, BLACK);
+    tft.setCursor(1, (SCREEN_HEIGHT - 8 * (FONT_SIZE - 2)) / 2 + 5);
+    tft.println("N/A");
+}
+
+/*
+  saveMeasurement will append the most recent measurement to the array and shift existing
+  measurements to keep only DISPLAY_THRESHOLD values in the array
+*/
 void saveMeasurement(int distance) {
     for (int i = 0; i < DISPLAY_THRESHOLD - 1; i++) {
         distances[i] = distances[i + 1];
@@ -130,12 +108,16 @@ void saveMeasurement(int distance) {
     distances[DISPLAY_THRESHOLD - 1] = distance;
 }
 
-void checkPrevious() {
+/*
+  checkPrevious will determine if there have been enough consecutive measurements to
+  re-enable the display
+*/
+bool checkPrevious() {
     int i;
     for (i = 0; i < DISPLAY_THRESHOLD; i++) {
         if (distances[i] > MAX_DISTANCE) {
             break;
         }
     }
-    on = (i == DISPLAY_THRESHOLD);
+    return (i == DISPLAY_THRESHOLD);
 }
