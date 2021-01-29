@@ -8,13 +8,16 @@
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
 
 int distances[DISPLAY_THRESHOLD];
+int sensors[NUM_SENSORS][3] = SENSOR_PINS;
 
 void setup() {
     Serial.begin(115200);
 
-    // Prepare distance sensor
-    pinMode(TRIG_PIN, OUTPUT);
-    pinMode(ECHO_PIN, INPUT);
+    // Prepare distance sensor(s)
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        pinMode(sensors[i][0], OUTPUT);
+        pinMode(sensors[i][1], INPUT);
+    }
 
     // Prepare display
     tft.begin();
@@ -29,10 +32,9 @@ void setup() {
 }
 
 void loop() {
-    long duration = readDuration();
-    int distance = duration * 0.034 / 2 - OFFSET;
+    int distance = readDistance();
 
-    if (duration == 0) {
+    if (distance <= 0) {
         Serial.println("No pulse from sensor");
         displayNA();
     } else {
@@ -51,15 +53,28 @@ void loop() {
 }
 
 /*
-  readDuration will send a pulse and read the incoming pulse to get the duration
+  readDistance will send a pulse and read the incoming pulse to get the duration. It will
+  use this duration to calculate the distance in centimeters.
+  When multiple sensors are being used, this will return the single smallest duration
+  read from the sensors
 */
-long readDuration() {
-    digitalWrite(TRIG_PIN, LOW);
-    delayMicroseconds(2);
-    digitalWrite(TRIG_PIN, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(TRIG_PIN, LOW);
-    return pulseIn(ECHO_PIN, HIGH);
+int readDistance() {
+    int min = INT_MAX;
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        digitalWrite(sensors[i][0], LOW);
+        delayMicroseconds(2);
+        digitalWrite(sensors[i][0], HIGH);
+        delayMicroseconds(10);
+        digitalWrite(sensors[i][0], LOW);
+        long duration = pulseIn(sensors[i][1], HIGH);
+
+        // Calculate distance using duration and offset for this particular sensor
+        int distance = duration * 0.034 / 2 - sensors[i][2];
+        if (distance < min) {
+            min = distance;
+        }
+    }
+    return min;
 }
 
 /*
