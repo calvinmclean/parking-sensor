@@ -33,15 +33,14 @@ void setup() {
 
 void loop() {
     int distance = readDistance();
+    Serial.print("Distance: ");
+    Serial.print(distance);
+    Serial.println(" cm");
 
     if (distance <= 0) {
         Serial.println("No pulse from sensor");
         displayNA();
     } else {
-        Serial.print("Distance: ");
-        Serial.print(distance);
-        Serial.println(" cm");
-
         saveMeasurement(distance);
         if (distance <= MAX_DISTANCE && checkPrevious()) {
             displayDistance(distance);
@@ -59,7 +58,7 @@ void loop() {
   read from the sensors
 */
 int readDistance() {
-    int min = INT_MAX;
+    int min = INT8_MAX;
     for (int i = 0; i < NUM_SENSORS; i++) {
         digitalWrite(sensors[i][0], LOW);
         delayMicroseconds(2);
@@ -67,6 +66,9 @@ int readDistance() {
         delayMicroseconds(10);
         digitalWrite(sensors[i][0], LOW);
         long duration = pulseIn(sensors[i][1], HIGH);
+
+        Serial.print("Duration: ");
+        Serial.println(duration);
 
         // Calculate distance using duration and offset for this particular sensor
         int distance = duration * 0.034 / 2 - sensors[i][2];
