@@ -8,7 +8,7 @@
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
 
 int distances[DISPLAY_THRESHOLD];
-int sensors[NUM_SENSORS][3] = SENSOR_PINS;
+int sensors[NUM_SENSORS][3] = SENSORS;
 
 void setup() {
     Serial.begin(115200);

@@ -26,7 +26,7 @@
  *  5 = D1
  */
 #define NUM_SENSORS 1
-#define SENSOR_PINS { {16, 5, 7} }
+#define SENSORS { {16, 5, 7} }
 
  // OLED SPI pins
 #define SCLK_PIN 14 // D5
