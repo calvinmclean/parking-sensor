@@ -29,6 +29,14 @@ void setup() {
     delay(1000);
 #endif
     tft.fillScreen(BLACK);
+
+    // Check for sensor data
+    if (readDistance() <= 0) {
+        Serial.println("No pulse from sensor");
+        displayNA();
+        delay(3000);
+        tft.fillScreen(BLACK);
+    }
 }
 
 void loop() {
@@ -39,7 +47,6 @@ void loop() {
 
     if (distance <= 0) {
         Serial.println("No pulse from sensor");
-        displayNA();
     } else {
         saveMeasurement(distance);
         if (distance <= MAX_DISTANCE && checkPrevious()) {
