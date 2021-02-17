@@ -41,12 +41,10 @@ void setup() {
 
 void loop() {
     int distance = readDistance();
-    Serial.print("Distance: ");
-    Serial.print(distance);
-    Serial.println(" cm");
+    printf("Read distance: %d cm\n", distance);
 
     if (distance <= 0) {
-        Serial.println("No pulse from sensor");
+        Serial.println("No pulse from sensors");
     } else {
         saveMeasurement(distance);
         if (distance <= MAX_DISTANCE && checkPrevious()) {
@@ -70,17 +68,20 @@ int readDistance() {
         digitalWrite(sensors[i][0], LOW);
         delayMicroseconds(2);
         digitalWrite(sensors[i][0], HIGH);
-        delayMicroseconds(10);
+        delayMicroseconds(20);
         digitalWrite(sensors[i][0], LOW);
         long duration = pulseIn(sensors[i][1], HIGH);
 
-        Serial.print("Duration: ");
-        Serial.println(duration);
-
         // Calculate distance using duration and offset for this particular sensor
-        int distance = duration * 0.034 / 2 - sensors[i][2];
-        if (distance < min) {
-            min = distance;
+        if (duration > 0) {
+            int distance = duration * 0.034 / 2 - sensors[i][2];
+            printf("Sensor %d read: %d cm\n", i, distance);
+
+            if (distance < min) {
+                min = distance;
+            }
+        } else {
+            printf("No pulse from sensor %d\n", i);
         }
     }
     return min;
