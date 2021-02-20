@@ -83,6 +83,8 @@ int readDistance() {
         } else {
             printf("No pulse from sensor %d\n", i);
         }
+        // Very small delay between sensor readings to prevent interference
+        delay(1);
     }
     return min;
 }
