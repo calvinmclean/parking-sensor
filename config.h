@@ -30,7 +30,7 @@
  * OFFSET is the distance from the front of the sensor to the front of the car.
  */
 #define NUM_SENSORS 2
-#define SENSORS { {GPIO_NUM_26, GPIO_NUM_27, 7}, {GPIO_NUM_14, GPIO_NUM_12, 10} }
+#define SENSORS { {GPIO_NUM_26, GPIO_NUM_27, 7}, {GPIO_NUM_14, GPIO_NUM_12, 13} }
 
 /**
  * OLED SPI Pins
