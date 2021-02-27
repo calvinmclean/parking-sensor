@@ -8,6 +8,8 @@
  *   Smallest distance to display on the screen and bottom of range for color changing (100% RED)
  * - FAR_DISTANCE:
  *   Top of range for color changing (100% GREEN)
+ * - MIN_DISTANCE:
+ *   Smallest distance to display on screen
  * - MAX_DISTANCE:
  *   Largest distance to display on screen
  * - DISPLAY_THRESHOLD:
@@ -16,6 +18,7 @@
  */
 #define CLOSE_DISTANCE 30
 #define FAR_DISTANCE 65
+#define MIN_DISTANCE 16
 #define MAX_DISTANCE 99
 #define DISPLAY_THRESHOLD 5
 

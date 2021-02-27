@@ -7,7 +7,7 @@
 
 Adafruit_SSD1351 tft = Adafruit_SSD1351(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, CS_PIN, DC_PIN, RST_PIN);
 
-int distances[DISPLAY_THRESHOLD];
+int distances[NUM_SENSORS][DISPLAY_THRESHOLD];
 int sensors[NUM_SENSORS][3] = SENSORS;
 
 void setup() {
@@ -46,11 +46,12 @@ void loop() {
     if (distance <= 0) {
         Serial.println("No pulse from sensors");
     } else {
-        saveMeasurement(distance);
-        if (distance <= MAX_DISTANCE && checkPrevious()) {
-            displayDistance(distance);
-        } else {
+        if (distance > MAX_DISTANCE) {
             tft.fillScreen(BLACK);
+        } else if (distance < MIN_DISTANCE) {
+            tft.fillScreen(RED);
+        } else {
+            displayDistance(distance);
         }
     }
     delay(200);
@@ -76,8 +77,8 @@ int readDistance() {
         if (duration > 0) {
             int distance = duration * 0.034 / 2 - sensors[i][2];
             printf("Sensor %d read: %d cm\n", i, distance);
-
-            if (distance < min) {
+            saveMeasurement(i, distance);
+            if (distance < min && readingIsValid(i)) {
                 min = distance;
             }
         } else {
@@ -128,21 +129,21 @@ void displayNA() {
   saveMeasurement will append the most recent measurement to the array and shift existing
   measurements to keep only DISPLAY_THRESHOLD values in the array
 */
-void saveMeasurement(int distance) {
+void saveMeasurement(int index, int distance) {
     for (int i = 0; i < DISPLAY_THRESHOLD - 1; i++) {
-        distances[i] = distances[i + 1];
+        distances[index][i] = distances[index][i + 1];
     }
-    distances[DISPLAY_THRESHOLD - 1] = distance;
+    distances[index][DISPLAY_THRESHOLD - 1] = distance;
 }
 
 /*
-  checkPrevious will determine if there have been enough consecutive measurements to
+  readingIsValid will determine if there have been enough consecutive measurements to
   re-enable the display
 */
-bool checkPrevious() {
+bool readingIsValid(int index) {
     int i;
     for (i = 0; i < DISPLAY_THRESHOLD; i++) {
-        if (distances[i] > MAX_DISTANCE) {
+        if (distances[index][i] > MAX_DISTANCE || distances[index][i] < MIN_DISTANCE) {
             break;
         }
     }
