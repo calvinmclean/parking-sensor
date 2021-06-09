@@ -65,7 +65,7 @@ long readDuration() {
     digitalWrite(TRIG_PIN, LOW);
     delayMicroseconds(2);
     digitalWrite(TRIG_PIN, HIGH);
-    delayMicroseconds(10);
+    delayMicroseconds(20);
     digitalWrite(TRIG_PIN, LOW);
     return pulseIn(ECHO_PIN, HIGH);
 }
