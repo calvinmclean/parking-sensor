@@ -1,13 +1,24 @@
 #ifndef config_h
 #define config_h
 
-// bottom of range for color changing (RED)
+/**
+  * Distance Display Settings -- configure what is shown on the screen
+  *
+  * - CLOSE_DISTANCE:
+  *   Smallest distance to display on the screen and bottom of range for color changing (100% RED)
+  * - FAR_DISTANCE:
+  *   Top of range for color changing (100% GREEN)
+  * - MAX_DISTANCE:
+  *   Largest distance to display on screen
+  * - DISPLAY_THRESHOLD:
+  *   Number of consecutive valid readings before re-enabling display this will help to prevent random
+  *   distance readings while driving
+  * - OFFSET:
+  *   Distance from sensor to front of car
+  */
 #define CLOSE_DISTANCE 30
-// top of range for color changing (GREEN)
 #define FAR_DISTANCE 65
-// max distance to display
 #define MAX_DISTANCE 99
-// distance from sensor to front of car
 #define OFFSET 7
 
 // number of consecutive valid readings before re-enabling display
@@ -15,14 +26,16 @@
 #define DISPLAY_THRESHOLD 5
 
 // Distance sensor pins
-#define TRIG_PIN 16 // D0
-#define ECHO_PIN 5 // D1
+#define TRIG_PIN GPIO_NUM_26
+#define ECHO_PIN GPIO_NUM_27
 
-// OLED SPI pins
-#define SCLK_PIN 14 // D5
-#define MOSI_PIN 13 // D7
-#define DC_PIN   4  // D2
-#define CS_PIN   15 // D8
-#define RST_PIN  0  // D3
+/**
+ * OLED SPI Pins
+ */
+#define SCLK_PIN GPIO_NUM_18
+#define MOSI_PIN GPIO_NUM_23
+#define DC_PIN   GPIO_NUM_16
+#define CS_PIN   GPIO_NUM_17
+#define RST_PIN  GPIO_NUM_5
 
 #endif

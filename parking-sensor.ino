@@ -25,6 +25,15 @@ void setup() {
     tft.drawBitmap(0, 0, volvoLogo, 128, 128, BLACK, WHITE);
     delay(1000);
 #endif
+
+    // Check for sensor data
+    if (readDistance() <= 0) {
+        Serial.println("No pulse from sensor");
+        displayNA();
+        delay(3000);
+        tft.fillScreen(BLACK);
+    }
+
     tft.fillScreen(BLACK);
 }
 
@@ -34,7 +43,6 @@ void loop() {
 
     if (duration == 0) {
         Serial.println("No pulse from sensor");
-        displayNA();
     } else {
         Serial.print("Distance: ");
         Serial.print(distance);
